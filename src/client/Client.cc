@@ -8537,6 +8537,7 @@ loff_t Client::_lseek(Fh *f, loff_t offset, int whence)
 {
   Inode *in = f->inode.get();
   int r;
+  loff_t old_pos = f->pos;
 
   switch (whence) {
   case SEEK_SET:
@@ -8556,6 +8557,11 @@ loff_t Client::_lseek(Fh *f, loff_t offset, int whence)
 
   default:
     ceph_abort();
+  }
+
+  if (f->pos < 0) {
+    f->pos = old_pos;
+    return -EINVAL;
   }
 
   ldout(cct, 3) << "_lseek(" << f << ", " << offset << ", " << whence << ") = " << f->pos << dendl;
